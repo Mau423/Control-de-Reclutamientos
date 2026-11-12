@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ControlVacantes{% endblock %} - Control de Reclutamiento</title>
+    <style>
+        /* Reset y base */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        /* Navegación superior */
+        nav {
+            background-color: #252525;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4a90e2;
+            text-decoration: none;
+        }
+
+        .logo:hover {
+            color: #6ba3f0;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            color: #b0b0b0;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #4a90e2;
+        }
+
+        /* Contenedor principal */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Mensajes flash (alertas) */
+        .flash-messages {
+            margin-bottom: 1.5rem;
+        }
+
+        .flash {
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease;
+        }
+
+        .flash.success {
+            background-color: #1e4620;
+            color: #a5d6a7;
+            border: 1px solid #4caf50;
+        }
+
+        .flash.error {
+            background-color: #4a1a1a;
+            color: #ef9a9a;
+            border: 1px solid #f44336;
+        }
+
+        .flash.warning {
+            background-color: #4a3d1a;
+            color: #ffe082;
+            border: 1px solid #ff9800;
+        }
+
+        .flash.info {
+            background-color: #1a3a4a;
+            color: #81d4fa;
+            border: 1px solid #2196f3;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Bloque de contenido principal */
+        .content {
+            min-height: 400px;
+        }
+
+        /* Tarjetas */
+        .card {
+            background-color: #252525;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            color: #4a90e2;
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+
+        /* Formularios */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b0b0b0;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #333;
+            border: 1px solid #4a4a4a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        /* Botones */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: #4a90e2;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #3a78c8;
+        }
+
+        .btn-secondary {
+            background-color: #555;
+        }
+
+        .btn-secondary:hover {
+            background-color: #444;
+        }
+
+        .btn-danger {
+            background-color: #d32f2f;
+        }
+
+        .btn-danger:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-success {
+            background-color: #388e3c;
+        }
+
+        .btn-success:hover {
+            background-color: #2e7d32;
+        }
+
+        /* Tabla */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #252525;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        th {
+            background-color: #2d2d2d;
+            color: #b0b0b0;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        tr:hover {
+            background-color: #2d2d2d;
+        }
+
+        /* Semáforo */
+        .semaforo {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .semaforo.verde { background-color: #4caf50; box-shadow: 0 0 6px #4caf50; }
+        .semaforo.amarillo { background-color: #ff9800; box-shadow: 0 0 6px #ff9800; }
+        .semaforo.rojo { background-color: #f44336; box-shadow: 0 0 6px #f44336; }
+
+        .estado-verde { color: #4caf50; font-weight: bold; }
+        .estado-amarillo { color: #ff9800; font-weight: bold; }
+        .estado-rojo { color: #f44336; font-weight: bold; }
+
+        /* Contadores grandes */
+        .contadores {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .contador {
+            flex: 1;
+            background-color: #252525;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .contador .valor {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .contador .etiqueta {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+            margin-top: 0.25rem;
+        }
+
+        .contador.verde .valor { color: #4caf50; }
+        .contador.amarillo .valor { color: #ff9800; }
+        .contador.rojo { color: #f44336; }
+
+        .contador.verde .valor { color: #4caf50; }
+        .contador.amarillo .valor { color: #ff9800; }
+        .contador.rojo .valor { color: #f44336; }
+
+        /* Filtros */
+        .filtros {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            align-items: end;
+        }
+
+        .filtro-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filtro-group label {
+            font-size: 0.9rem;
+            color: #b0b0b0;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.activo {
+            display: flex;
+        }
+
+        .modal {
+            background-color: #252525;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h3 {
+            color: #4a90e2;
+            margin-bottom: 1rem;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 1.5rem;
+            color: #b0b0b0;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #ffffff;
+        }
+
+        .json-preview {
+            background-color: #1a1a1a;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #81d4fa;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #252525;
+            border-top: 1px solid #3a3a3a;
+            padding: 1.5rem 2rem;
+            color: #808080;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        /* Utilidades */
+        .text-center { text-align: center; }
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('vacantes.inicio') }}" class="logo">ControlVacantes</a>
+        <div class="nav-links">
+            <a href="{{ url_for('vacantes.inicio') }}">Inicio</a>
+            <a href="{{ url_for('vacantes.resultados') }}">Resultados</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                <div class="flash-messages">
+                    {% for categoria, mensaje in mensajes %}
+                        <div class="flash {{ categoria }}">{{ mensaje }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <footer>
+        <p>ControlVacantes &copy; 2026 - Departamento de Recursos Humanos - 100% en español</p>
+    </footer>
+
+    {% block modals %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

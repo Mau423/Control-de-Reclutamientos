@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados{% endblock %}
+
+{% block content %}
+<div class="card mb-2">
+    <h2>Panel de Resultados</h2>
+    <p>Estado de las vacantes de reclutamiento procesadas.</p>
+
+    <!-- Panel de Alertas: Contadores grandes -->
+    <div class="contadores">
+        <div class="contador verde">
+            <span class="valor">{{ contadores.Verde }}</span>
+            <span class="etiqueta">Verde</span>
+        </div>
+        <div class="contador amarillo">
+            <span class="valor">{{ contadores.Amarillo }}</span>
+            <span class="etiqueta">Amarillo</span>
+        </div>
+        <div class="contador rojo">
+            <span class="valor">{{ contadores.Rojo }}</span>
+            <span class="etiqueta">Rojo</span>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+        <div class="filtro-group">
+            <label for="filtro-ejecutor">Filtrar por Ejecutor:</label>
+            <select id="filtro-ejecutor" name="filtro-ejecutor">
+                <option value="">Todos los ejecutores</option>
+                {% for ejecutor in ejecutores_disponibles %}
+                    <option value="{{ ejecutor }}">{{ ejecutor }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filtro-group">
+            <label for="filtro-alerta">Filtrar por nivel de alerta:</label>
+            <select id="filtro-alerta" name="filtro-alerta">
+                <option value="">Todos los estados</option>
+                <option value="Verde">Verde</option>
+                <option value="Amarillo">Amarillo</option>
+                <option value="Rojo">Rojo</option>
+            </select>
+        </div>
+        <button type="button" class="btn btn-secondary" onclick="aplicarFiltros()">Aplicar filtros</button>
+        <a href="{{ url_for('vacantes.inicio') }}" class="btn">Cargar otro archivo</a>
+    </div>
+
+    <!-- Tabla interactiva -->
+    <div class="table-container">
+        <table id="tabla-resultados">
+            <thead>
+                <tr>
+                    <th>Requisición</th>
+                    <th>Puesto</th>
+                    <th>Ejecutor</th>
+                    <th>Fecha Req.</th>
+                    <th>Fecha Cierre</th>
+                    <th>Días Transcurridos</th>
+                    <th>Meta Días</th>
+                    <th>Días Exceso</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for registro in registros %}
+                <tr data-semaforo="{{ registro.estado_semaforo }}" data-ejecutor="{{ registro.ejecutor }}">
+                    <td>{{ registro.id_requisicion }}</td>
+                    <td>{{ registro.puesto }}</td>
+                    <td>{{ registro.ejecutor }}</td>
+                    <td>{{ registro.fecha_requisicion.split(' ')[0] if registro.fecha_requisicion else '—' }}</td>
+                    <td>{{ registro.fecha_cierre.split(' ')[0] if registro.fecha_cierre else '—' }}</td>
+                    <td>{{ registro.dias_transcurridos if registro.dias_transcurridos is not none else '—' }}</td>
+                    <td>{{ registro.meta_dias }}</td>
+                    <td>{{ registro.dias_exceso if registro.dias_exceso is not none else '—' }}</td>
+                    <td>
+                        <span class="semaforo {{ registro.estado_semaforo.lower() }}"></span>
+                        <span class="estado-{{ registro.estado_semaforo.lower() }}">{{ registro.estado_semaforo }}</span>
+                    </td>
+                    <td>
+                        {% if registro.estado_semaforo in ('Amarillo', 'Rojo') %}
+                            <button type="button" class="btn btn-secondary btn-ver-analisis"
+                                    data-id="{{ registro.id_requisicion }}"
+                                    onclick="abrirModalIA('{{ registro.id_requisicion }}')">
+                                Ver Análisis IA
+                            </button>
+                        {% else %}
+                            <span style="color:#808080; font-size:0.85rem;">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Botón de exportación -->
+    <div class="mt-2 text-center">
+        <a href="{{ url_for('vacantes.exportar') }}" class="btn btn-success">Exportar a Excel</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<!-- Modal de Inteligencia Artificial -->
+<div class="modal-overlay" id="modalIA">
+    <div class="modal">
+        <div class="modal-close" onclick="cerrarModalIA()">×</div>
+        <h3>Análisis IA - <span id="modal-id-requisicion"></span></h3>
+        <div class="json-preview" id="modal-json">Cargando análisis...</div>
+        <div class="mt-2 text-center">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModalIA()">Cerrar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function aplicarFiltros() {
+    const ejecutor = document.getElementById('filtro-ejecutor').value;
+    const alerta = document.getElementById('filtro-alerta').value;
+    const filas = document.querySelectorAll('#tabla-resultados tbody tr');
+
+    filas.forEach(fila => {
+        const ej = fila.getAttribute('data-ejecutor');
+        const sem = fila.getAttribute('data-semaforo');
+        const coincideEjecutor = !ejecutor || ej === ejecutor;
+        const coincideAlerta = !alerta || sem === alerta;
+        fila.style.display = (coincideEjecutor && coincideAlerta) ? '' : 'none';
+    });
+}
+
+function abrirModalIA(idRequisicion) {
+    const modal = document.getElementById('modalIA');
+    const titulo = document.getElementById('modal-id-requisicion');
+    const json = document.getElementById('modal-json');
+
+    titulo.textContent = idRequisicion;
+    json.textContent = 'Cargando análisis IA...';
+    modal.classList.add('activo');
+
+    // Llamar al endpoint del agente de IA para este registro
+    fetch(`/analisis-ia/${encodeURIComponent(idRequisicion)}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Error al cargar el análisis');
+            return response.json();
+        })
+        .then(data => {
+            json.textContent = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            json.textContent = 'Error: ' + error.message;
+        });
+}
+
+function cerrarModalIA() {
+    document.getElementById('modalIA').classList.remove('activo');
+}
+
+// Cerrar modal al hacer clic fuera del contenido
+document.getElementById('modalIA').addEventListener('click', function(e) {
+    if (e.target === this) {
+        cerrarModalIA();
+    }
+});
+</script>
+{% endblock %}
