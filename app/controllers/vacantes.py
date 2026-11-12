@@ -33,6 +33,20 @@ from app.services.regla_r6 import AlertaValidacion, validar_fila
 
 vacantes_bp = Blueprint("vacantes", __name__)
 
+# ---------------------------------------------------------------------------
+# Control de acceso: exigir autenticación en todas las rutas de este blueprint
+# ---------------------------------------------------------------------------
+
+
+@vacantes_bp.before_request
+def _requiere_autenticacion():
+    """Redirige a /login si el usuario no ha iniciado sesión."""
+    from flask import request
+
+    if "usuario" not in session:
+        return redirect(url_for("auth.login"))
+
+
 # Directorio para almacenar resultados temporales de procesamiento
 # Se resuelve en la primera solicitud usando current_app.instance_path
 _RESULTADOS_DIR = None

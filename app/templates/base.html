@@ -380,10 +380,16 @@
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('vacantes.inicio') }}" class="logo">ControlVacantes</a>
+        <a href="{{ url_for('vacantes.inicio') if session.get('usuario') else url_for('auth.login') }}" class="logo">ControlVacantes</a>
         <div class="nav-links">
-            <a href="{{ url_for('vacantes.inicio') }}">Inicio</a>
-            <a href="{{ url_for('vacantes.resultados') }}">Resultados</a>
+            {% if session.get("usuario") %}
+                <a href="{{ url_for('vacantes.inicio') }}">Inicio</a>
+                <a href="{{ url_for('vacantes.resultados') }}">Resultados</a>
+                <span style="color:#b0b0b0; font-size:0.9rem;">{{ session.usuario }}</span>
+                <a href="{{ url_for('auth.salir') }}" style="color:#4a90e2;">Salir</a>
+            {% else %}
+                <a href="{{ url_for('auth.login') }}">Ingresar</a>
+            {% endif %}
         </div>
     </nav>
 

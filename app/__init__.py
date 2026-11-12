@@ -4,6 +4,7 @@ import os
 
 from flask import Flask
 
+from app.controllers.auth import auth_bp
 from app.controllers.vacantes import vacantes_bp
 
 
@@ -21,7 +22,12 @@ def create_app() -> Flask:
     # Clave secreta para sesiones (obligatoria para usar session en Flask)
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-cambiar-en-produccion")
 
-    # Registrar blueprint de controladores de vacantes
+    # Credenciales de acceso (sin base de datos, desde variables de entorno)
+    app.config["APP_USUARIO"] = os.getenv("APP_USUARIO")
+    app.config["APP_CLAVE"] = os.getenv("APP_CLAVE")
+
+    # Registrar blueprints
+    app.register_blueprint(auth_bp)
     app.register_blueprint(vacantes_bp)
 
     @app.get("/health")

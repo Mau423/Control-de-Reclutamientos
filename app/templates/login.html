@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Iniciar sesión{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 400px; margin: 0 auto;">
+    <h2 style="text-align: center;">Iniciar sesión</h2>
+    <p style="text-align: center; color: #b0b0b0; margin-bottom: 1.5rem;">
+        Acceso al panel de Control de Reclutamiento
+    </p>
+
+    <form method="POST" action="{{ url_for('auth.autenticar') }}">
+        <div class="form-group">
+            <label for="usuario">Usuario:</label>
+            <input type="text" name="usuario" id="usuario" required autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label for="clave">Contraseña:</label>
+            <input type="password" name="clave" id="clave" required autocomplete="current-password">
+        </div>
+        <div class="form-group mt-2">
+            <button type="submit" class="btn btn-success" style="width: 100%;">Ingresar</button>
+        </div>
+    </form>
+
+    <div class="mt-2 text-center">
+        <p style="color: #808080; font-size: 0.85rem;">
+            Si olvida sus credenciales, contacte al administrador.
+        </p>
+    </div>
+</div>
+{% endblock %}
